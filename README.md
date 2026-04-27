@@ -1,8 +1,9 @@
 # Hunter's Arena : Revolution
 **게임 소개 영상 : https://www.youtube.com/watch?v=DAcVITWIVzc**
 
-Megalink(前 Mantisco)의 이전 작 Hunter's Arena : Legends IP를 활용한 익스트랙션 장르의 게임입니다.
+**성과** : Steam / Epic 플랫폼 CBT 및 Early Access 런칭
 
+Megalink(前 Mantisco)의 Hunter's Arena : Legends IP를 활용한 익스트랙션 장르의 게임입니다.
 
 최대 8명의 플레이어가 한 세션에 입장하여 전투나 오브젝트와의 상호작용을 통해 아이템을 파밍하고 탈출하는 방식으로 진행됩니다.
 
