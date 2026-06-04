@@ -244,6 +244,8 @@
 - 로컬 시간변경에 대응하여 비정상적인 동작을 방지
 - 텍스트 포맷 기반의 Localization 대응하여 어떤 나라의 언어에서도 자연스럽게 보일 수 있도록 처리
 
+[목차로 이동](#table-contents)
+
 
 <a name="spawner"></a>
 ## 4. 스포너 및 검증 툴
@@ -294,7 +296,7 @@
 - 오류 발생 시 5분 이내로 원인을 확인하고 수정할 수 있도록 휴먼에러 검출 시간 개선
 - 잘못된 데이터 기입으로 인한 재빌드 빈도 비용을 줄임
 
-
+[목차로 이동](#table-contents)
 
 
 <a name="bp-to-cpp"></a>
@@ -337,26 +339,27 @@
 
 그 밖에도, 뒤늦게 로드되어도 상관없는 에셋들을 `SoftReference`를 이용해 참조 관계를 관리했습니다.
 
-
 ### 5.4 결과
 <hr>
 
 - `Blueprint` 클래스간 의존성을 줄이고 `Native` 클래스 중심으로 참조하도록 개선하여 에셋 로드 범위를 최소화했습니다.
 - 순환 참조 및 연쇄 컴파일시 발생하는 문제를 완화하여 `Blueprint` 수정 시 발생하던 긴 대기 시간을 50% 이상 줄이고 개발 생산성을 향상시켰습니다.
 
+[목차로 이동](#table-contents)
 
 <a name="reconnect"></a>
 ## 6. 재접속
 - Inactive PlayerState 기반의 프레임워크 흐름에 맞도록 재연결 구조 설계
 - 플레이어 연결 해제시 Character Destroy 및 CMC 비동작 문제 발생 → 내부 코드를 분석하여 원인 파악 후 수정
 
+[목차로 이동](#table-contents)
 
 <a name="plugin"></a>
 ## 7. 엔진 및 플러그인 개선 경험
 - UMG Drag & Drop 시작시 지연되어 따라오며 플레이 경험 저하, 원인 분석 및 엔진 코드 수정
 - Able Ability System 기능 확장 (Task 확장 / Task 우선순위 기능 추가)
 
-
+[목차로 이동](#table-contents)
 
 
 
