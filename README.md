@@ -17,7 +17,7 @@
 > 3. [의뢰(퀘스트)](#quest)
 > 4. [스포너 및 검증 툴](#spawner)
 > 5. [Blueprint -> C++ 포팅](#bp-to-cpp)
-> 6. [재접속](#reconnect)
+> 6. [언리얼 프레임워크 기반 재접속 시스템](#reconnect)
 > 7. [엔진 및 플러그인 개선 경험](#plugin)
 
 <a name="skill"></a>
@@ -349,7 +349,7 @@
 
 
 <a name="reconnect"></a>
-## 6. 재접속
+## 6. 언리얼 프레임워크 기반 재접속 시스템
 ### 6.1 개요
 <hr>
 
