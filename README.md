@@ -400,6 +400,7 @@ void APlayerState::CopyProperties(APlayerState* PlayerState)
 ```
 
 이런 방식은 기존의 데이터를 유지하기 위해 데이터를 모두 `APlayerState::CopyProperties()` 함수를 통해 추가해줘야 하는 번거로움이 있습니다.  
+새로운 데이터가 추가될 때마다 CopyProperties를 수정해야 했으며, 누락 시 데이터가 손실될 수도 있으므로 유지보수 비용이 높다고 판단했습니다.	
 
 그래서 기존의 `PlayerState`를 유지하고 `InactivePlayerState`로 사용할 수 있도록 `GameMode` 코드를 개선했습니다.
 
