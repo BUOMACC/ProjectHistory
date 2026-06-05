@@ -256,7 +256,7 @@
 
 공통 스폰 로직과 생성 방식을 분리하여 다양한 스폰 방식을 유연하게 적용할 수 있도록 설계했으며, 에디터 단계에서 스폰 위치를 미리 시각적으로 확인할 수 있도록 제작했습니다.  
 
-### 4.2 설계
+### 4.2 접근 및 설계
 <hr>
 
 스포너 시스템은 공통 기능과 개별 생성 로직을 분리하기 위해 베이스 클래스 중심으로 설계했습니다.  
@@ -272,7 +272,7 @@
 
 또한, 바닥에 스폰될 수 있도록 GroundTrace를 처리하고 `ChildActorComponent`를 활용해 어디에 배치될지 미리 `Editor`에서 확인할 수 있도록 하여 시작-종료를 반복하는 번거로움을 줄였습니다.  
 
-### 4.3 문제점 및 해결방안
+### 4.3 문제점 및 개선 방안
 <hr>
 
 수백개의 스폰 데이터와 레벨 내 배치된 스포너의 개수가 많아지면서 잘못된 데이터를 기입하는 휴먼에러가 종종 발생했습니다.  
@@ -339,6 +339,7 @@
 
 그 밖에도, 뒤늦게 로드되어도 상관없는 에셋들을 `SoftReference`를 이용해 참조 관계를 관리했습니다.
 
+
 ### 5.4 결과
 <hr>
 
@@ -347,12 +348,85 @@
 
 [목차로 이동](#table-contents)
 
+
 <a name="reconnect"></a>
 ## 6. 재접속
-- Inactive PlayerState 기반의 프레임워크 흐름에 맞도록 재연결 구조 설계
-- 플레이어 연결 해제시 Character Destroy 및 CMC 비동작 문제 발생 → 내부 코드를 분석하여 원인 파악 후 수정
+### 6.1 개요
+<hr>
+
+플레이어가 게임 도중 연결을 끊고 세션 종료 전 재접속시 데이터를 그대로 이어받은채 플레이 가능하도록 하는 시스템
+
+### 6.2 접근 및 설계
+<hr>
+
+재접속 시스템 구현을 위해 우선적으로 해결해 나가야 하는 기능들을 나열했습니다.  
+- `PlayerController`가 `Destroy`된 경우, `Pawn`도 함께 `Desotry`되는 현상
+- 접속 종료 후에도 `PlayerState`의 데이터 유지를 위한 처리
+- 다시 접속한 경우, `PlayerState`와 `Pawn`을 연결하는 처리
+- 나간 상태에서 세션의 진행 처리
+
+이런 기능들을 구현하기 위해 `Unral Engine`의 프레임워크 코드를 분석했습니다.  
+
+
+#### PlayerController가 Destroy된 경우, Pawn도 함께 Desotry되는 현상
+<hr>
+
+플레이어가 퇴장한 상태에서 다른 사람에게 공격받을 수 있어야 하고 `Pawn`이 가진 정보를 그대로 유지한 채 다시 시작할 수 있어야 하기 때문에, `Pawn`을 다시 리스폰하는 방식보다 유지하는 방식이 합리적이라고 판단했습니다.  
+
+이를 해결하기 위해 `APlayerController::Destroyed()` 함수를 오버라이딩 하여 `Pawn`이 `Destroy`되지 않는 방향으로 수정했습니다.
+
+
+#### 접속 종료 후에도 PlayerState의 데이터 유지를 위한 처리  
+<hr>
+
+`PlayerState`에서 플레이 데이터를 가지고 있었기 때문에 종료한 뒤에도 `PlayerState`를 유지하고 있어야 했습니다.  
+`Unreal Engine`은 비활성화된 플레이어를 기존의 `PlayerState`를 복제한 `InactivePlayerState` 객체로 유지하고 기존의 `PlayerState`는 `Destroy` 됩니다.  
+
+하지만, 복제하는 함수 `APlayerState::Duplicate()`는 단순히 새로운 `PlayerState`를 생성하고 수동으로 값을 복사(`APlayerState::CopyProperties()`)하는 과정에 불과했습니다.  
+
+``` C++
+void APlayerState::CopyProperties(APlayerState* PlayerState)
+{
+	PlayerState->SetScore(GetScore());
+	PlayerState->SetCompressedPing(GetCompressedPing());
+	PlayerState->ExactPing = ExactPing;
+	PlayerState->SetPlayerId(GetPlayerId());
+	PlayerState->SetUniqueId(GetUniqueId());
+	PlayerState->SetPlayerNameInternal(GetPlayerName());
+	PlayerState->SetStartTime(GetStartTime());
+	PlayerState->SavedNetworkAddress = SavedNetworkAddress;
+}
+```
+
+이런 방식은 기존의 데이터를 유지하기 위해 데이터를 모두 `APlayerState::CopyProperties()` 함수를 통해 추가해줘야 하는 번거로움이 있습니다.  
+
+그래서 기존의 `PlayerState`를 유지하고 `InactivePlayerState`로 사용할 수 있도록 `GameMode` 코드를 개선했습니다.
+
+
+#### 다시 접속한 경우, PlayerState와 Pawn을 연결하는 처리  
+<hr>
+
+플레이어가 다시 세션으로 복귀할 때의 시점 `AGameMode::PostLogin()` -> `FindInactivePlayer()`에서 고유 Id를 활용해 매칭했습니다.  
+`PlayerState`를 매칭시킨 이후에는 플레이어가 시작되는 시점 `HandleStartingNewPlayer()`에는 접속종료된 `Pawn`을 찾아 캐싱한 고유 Id로 매칭하여 빙의합니다.  
+
+
+### 6.3 발생한 문제
+<hr>
+
+첫 번째로, `PlayerState`가 `Inactive`된 상태에서 유지되는 시간이 짧아 재접속 전 파괴될 우려가 있었습니다.  
+→ `InactivePlayerStateLifeSpan` 값이 `300.f`로 설정되어 있었으므로, 이 값을 조절하여 세션 종료까지 유지되도록 했습니다.  
+
+두 번째로, 플레이어가 접속을 종료하면 `Pawn`은 어떤 상황에서도 밀려나지 않던 문제가 있었습니다.  
+`Pawn`은 `Controller`을 잃은 상태로 `CharacterMovementComponent` 내부에서 `Acceleration` 및 `Velocity` 값이 항상 초기화되어 시뮬레이션 되지 않았습니다. 
+→ 내부값 `bRunPhysicsWithNoController`을 활성화 시켜 문제를 해결했습니다.  
+
+세 번째로, 재접속시 일부 데이터가 동기화되지 않았습니다.  
+일부 시스템은 `Replicate` 기반으로 작업되어 정상적으로 데이터가 동기화되고 있었지만, 복잡한 데이터의 사용 등으로 `RPC`를 통해 동기화를 진행한 시스템은 다시 동기화하는 작업이 필요했습니다.  
+
+→ 재접속시 호출되도록 이벤트 `OnReconnect()` 함수를 추가하여 데이터를 다시 동기화하도록 처리했습니다.  
 
 [목차로 이동](#table-contents)
+
 
 <a name="plugin"></a>
 ## 7. 엔진 및 플러그인 개선 경험
@@ -360,6 +434,8 @@
 - Able Ability System 기능 확장 (Task 확장 / Task 우선순위 기능 추가)
 
 [목차로 이동](#table-contents)
+
+
 
 
 
