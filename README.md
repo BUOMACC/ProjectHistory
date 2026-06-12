@@ -13,7 +13,7 @@
 <a name="table-contents"></a>
 ## 주 작업 내역
 > 1. [Skill](#skill)
-> 3. [Character Stat](#stat)
+> 2. [Character Stat](#stat)
 > 3. [의뢰(퀘스트)](#quest)
 > 4. [스포너 및 검증 툴](#spawner)
 > 5. [Blueprint -> C++ 포팅](#bp-to-cpp)
